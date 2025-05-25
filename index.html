@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GPS Location Request</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 30px;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 350px;
+            margin: auto;
+        }
+        .status {
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .loading { color: blue; }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        .primary { background: #007bff; color: white; }
+        .secondary { background: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3>📍 GPS Request</h3>
+        <div id="status" class="status loading">Requesting location...</div>
+        <button onclick="getGPSLocation()" class="primary">Try Again</button>
+        <button onclick="window.close()" class="secondary">Cancel</button>
+    </div>
+
+    <script>
+        function getGPSLocation() {
+            const status = document.getElementById('status');
+            status.textContent = 'Getting location...';
+            status.className = 'status loading';
+
+            if (!navigator.geolocation) {
+                status.textContent = '❌ GPS not supported';
+                status.className = 'status error';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const loc = {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        accuracy: pos.coords.accuracy
+                    };
+                    status.textContent = '✅ Location found!';
+                    status.className = 'status success';
+
+                    // Send location back to parent
+                    window.opener.postMessage(loc, '*');
+                    setTimeout(() => window.close(), 1000);
+                },
+                (err) => {
+                    const errors = {
+                        1: '❌ Permission denied',
+                        2: '❌ Position unavailable',
+                        3: '❌ Timeout'
+                    };
+                    status.textContent = errors[err.code] || '❌ Unknown error';
+                    status.className = 'status error';
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 60000
+                }
+            );
+        }
+
+        // Trigger on load
+        setTimeout(getGPSLocation, 1000);
+    </script>
+</body>
+</html>
